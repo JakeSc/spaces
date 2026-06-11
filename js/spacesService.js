@@ -605,6 +605,7 @@
             //ignore subsequent windowRemoved events for the same windowId (each closing tab will try to call this)
             if (this.closedWindowIds[windowId]) {
                 callback();
+                return;
             }
 
             if (this.debug)

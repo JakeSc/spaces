@@ -15,6 +15,7 @@ var spaces = (function() {
     var spacesPopupWindowId = false,
         spacesOpenWindowId = false,
         previousAllSpacesList = [],
+        tabGroupUpdateTimers = {},
         noop = function() {},
         debug = true; // Set to false to disable debug console logs
 
@@ -57,6 +58,7 @@ var spaces = (function() {
         console.log('[SW] Tab attached to window - updating session. Tab:', tabId, 'Window:', attachInfo.newWindowId);
         
         // Tab attached to a window affects ordering
+        spacesService.queueWindowEvent(attachInfo.newWindowId);
         handleTabGroupChange(attachInfo.newWindowId, 'tab.attached');
         updateSpacesWindow('tabs.onAttached');
     });
@@ -67,6 +69,7 @@ var spaces = (function() {
         console.log('[SW] Tab detached from window - updating session. Tab:', tabId, 'Old Window:', detachInfo.oldWindowId);
         
         // Tab detached from a window affects ordering
+        spacesService.queueWindowEvent(detachInfo.oldWindowId);
         handleTabGroupChange(detachInfo.oldWindowId, 'tab.detached');
         updateSpacesWindow('tabs.onDetached');
     });
@@ -1381,6 +1384,20 @@ var spaces = (function() {
     function handleTabGroupChange(windowId, source) {
         console.log('[SW] ========== HANDLING TAB GROUP CHANGE ==========');
         console.log('[SW] Handling tab group change for window:', windowId, 'source:', source);
+
+        clearTimeout(tabGroupUpdateTimers[windowId]);
+        tabGroupUpdateTimers[windowId] = setTimeout(function() {
+            persistTabGroupChange(windowId, source);
+        }, 1000);
+    }
+
+    function persistTabGroupChange(windowId, source) {
+        delete tabGroupUpdateTimers[windowId];
+
+        if (spacesService.closedWindowIds[windowId]) {
+            console.log('[SW] Window is closing/closed; skipping tab group persistence for window:', windowId);
+            return;
+        }
         
         // Get the current session for this window
         const session = spacesService.getSessionByWindowId(windowId);
@@ -1395,7 +1412,12 @@ var spaces = (function() {
         // Get current window data including tabs and groups
         chrome.windows.get(windowId, { populate: true }, function(window) {
             if (chrome.runtime.lastError) {
-                console.log('[SW] Error getting window for tab group update:', chrome.runtime.lastError.message);
+                console.log('[SW] Error getting window for tab group update; skipping persistence:', chrome.runtime.lastError.message);
+                return;
+            }
+
+            if (spacesService.closedWindowIds[windowId]) {
+                console.log('[SW] Window closed while tab group update was pending; skipping persistence:', windowId);
                 return;
             }
 
@@ -1408,14 +1430,17 @@ var spaces = (function() {
                 
                 // Update the session with current tab groups
                 session.tabGroups = tabGroups;
-                session.tabs = window.tabs; // Also update tabs in case they changed
+                // Do not overwrite session.tabs here. Window teardown emits tab group
+                // events while tabs are disappearing, and saving that transient state
+                // corrupts the saved space. Tab ordering/content is persisted by the
+                // normal tab event queue in spacesService.
                 // Note: lastAccess is only updated when window is actually focused, not during tab updates
                 
                 console.log('[SW] 📝 About to save session with updated data...');
                 
                 // Save the updated session
                 spacesService.saveExistingSession(session.id, function() {
-                    console.log('[SW] ✅ Session successfully updated with new tab groups and tabs');
+                    console.log('[SW] ✅ Session successfully updated with new tab groups');
                     updateSpacesWindow(source);
                 });
             });

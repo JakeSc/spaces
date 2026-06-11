@@ -1,6 +1,21 @@
 # <img src="/img/icon48.png" align="absmiddle"> Spaces
 
-### A Chrome extension for Intuitive tab management
+### Jake's maintained fork of the Spaces Chrome/Brave extension
+
+This repo is a personal fork of Spaces, a Chrome extension for window-based
+workspace management. The fork exists to keep the extension usable on modern
+Chrome/Brave after Manifest V3, to preserve tab group metadata, and to fix
+regressions found while using named Spaces heavily.
+
+The most important local fix is for named spaces that contain Chrome/Brave tab
+groups. During window teardown, the browser emits tab-group events while tabs are
+disappearing. Older fork code handled those events by saving the whole tab list
+from the transient closing window, which could overwrite a saved space with an
+empty or partial tab list. This fork keeps tab-group persistence separate from
+canonical tab-list persistence so closing and reopening a grouped named space
+does not clobber its tabs.
+
+### Original project summary
 
 Spaces is a workspace manager for chrome.
 It treats each chrome window like a different workspace and lets you name and save each space.
@@ -26,7 +41,7 @@ Isn't this essentially just bookmarks with folders? Yeah, pretty much - but who 
 
 Please note that the webstore version may be behind the latest version here.
 
-### Chrome Web Store
+### Manifest V3
 
 This extension has been migrated to manifest v3 in order to be compatible with modern Chrome versions.
 
@@ -36,7 +51,7 @@ Along with manifest v3 migration, [Tab groups](https://blog.google/products/chro
 
 ### Install as an extension from source
 
-1. Download the **[latest available version](https://github.com/coolicz/spaces/archive/refs/heads/master.zip)** 
+1. Download the **[latest available version](https://github.com/jakesc/spaces/archive/refs/heads/master.zip)**
 2. Unarchive to your preferred location (e.g., `Downloads`).
 2. In **Google Chrome**, navigate to [chrome://extensions/](chrome://extensions/) and enable <kbd>Developer mode</kbd> in the upper right corner.
 3. Click on the <kbd>LOAD UNPACKED</kbd> button.
