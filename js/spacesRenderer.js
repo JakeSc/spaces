@@ -54,7 +54,7 @@ var spacesRenderer = {
         );
 
         listContainer.style.display = 'flex';
-        listContainer.style.visiblilty = 'visible';
+        listContainer.style.visibility = 'visible';
         listContainer.className = 'space';
         listTitle.className = 'spaceTitle';
         listDetail.className = 'spaceDetail';
@@ -229,17 +229,22 @@ var spacesRenderer = {
     addEventListeners: function() {
         var self = this;
 
-        this.nodes.moveInput.parentElement.parentElement.onkeyup = function(e) {
-            //listen for 'up' key
+        // Use keydown for arrow navigation to enable key repeat
+        this.nodes.moveInput.parentElement.parentElement.onkeydown = function(e) {
             if (e.keyCode === 38) {
+                // Up arrow
+                e.preventDefault();
                 self.handleSelectionNavigation('up');
-
-                //listen for 'down' key
             } else if (e.keyCode === 40) {
+                // Down arrow
+                e.preventDefault();
                 self.handleSelectionNavigation('down');
+            }
+        };
 
-                //else treat as text input (only trigger on alphanumeric, delete or backspace keys when modifiers are not down)
-            } else if (
+        // Use keyup for text input so the value is updated
+        this.nodes.moveInput.parentElement.parentElement.onkeyup = function(e) {
+            if (
                 !e.altKey &&
                 !e.ctrlKey &&
                 (e.keyCode === 46 ||
@@ -252,7 +257,7 @@ var spacesRenderer = {
 
         if (this.nodes.newSpace) {
             this.nodes.newSpace.onclick = function(e) {
-                self.handleSpaceClick;
+                self.handleSpaceClick(e);
             };
         }
     },
