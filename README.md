@@ -51,7 +51,7 @@ Along with manifest v3 migration, [Tab groups](https://blog.google/products/chro
 
 ### Install as an extension from source
 
-1. Download the **[latest available version](https://github.com/jakesc/spaces/archive/refs/heads/master.zip)**
+1. Download the **[latest available version](https://github.com/JakeSc/spaces/archive/refs/heads/master.zip)**
 2. Unarchive to your preferred location (e.g., `Downloads`).
 2. In **Google Chrome**, navigate to [chrome://extensions/](chrome://extensions/) and enable <kbd>Developer mode</kbd> in the upper right corner.
 3. Click on the <kbd>LOAD UNPACKED</kbd> button.
